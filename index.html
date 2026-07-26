@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Davit Nersisyan</title>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --dark:      #343534;
+    --mid:       #a2a4a2;
+    --bg:        #f5f5f4;
+    --sur:       #f0f0ee;
+    --off-white: #f0efeb;
+    --sans:      'Helvetica Neue', Arial, sans-serif;
+    --strip:     40px;
+    --nav-open:  200px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--dark);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ══════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════ */
+  .site { display:flex; height:100vh; overflow:hidden; }
+
+  /* ══════════════════════════════════════
+     SIDEBAR — permanent narrow strip, expands on hover
+  ══════════════════════════════════════ */
+  .nav-sidebar {
+    position: relative;
+    flex-shrink: 0;
+    width: var(--strip);
+    height: 100vh;
+    background: var(--bg);
+    border-right: 1px solid rgba(52,53,52,0.10);
+    z-index: 200;
+    overflow: visible;
+  }
+
+  .nav-panel {
+    position: absolute;
+    top: 0; left: 0;
+    width: var(--strip);
+    height: 100%;
+    background: var(--bg);
+    border-right: 1px solid rgba(52,53,52,0.10);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 0 32px;
+  }
+  .nav-sidebar:hover .nav-panel { width: var(--nav-open); }
+
+  /* Hamburger icon shown when collapsed */
+  .nav-dn {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: var(--strip);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 0;
+    pointer-events: none;
+    user-select: none;
+  }
+  .nav-dn span {
+    display: block;
+    width: 15px;
+    height: 1.5px;
+    background: var(--mid);
+    border-radius: 1px;
+  }
+  .nav-sidebar:hover .nav-dn { opacity: 0; }
+
+  .nav-inner {
+    padding: 0 20px;
+    white-space: nowrap;
+    opacity: 0;
+  }
+  .nav-sidebar:hover .nav-inner { opacity: 1; }
+
+  .nav-name {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--dark);
+    margin-bottom: 36px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .nav-name:hover { opacity: 0.65; }
+
+  .nav-menu { list-style: none; }
+  .nav-menu li { display: block; }
+
+  .nav-category {
+    display: block;
+    font-size: 13px;
+    color: var(--mid);
+    padding: 6px 0 2px;
+    letter-spacing: 0.04em;
+    cursor: default;
+    user-select: none;
+  }
+
+  .nav-sub { padding-left: 12px; }
+
+  .nav-menu a {
+    display: block;
+    font-size: 14px;
+    color: var(--dark);
+    text-decoration: none;
+    padding: 5px 0;
+    letter-spacing: 0.04em;
+  }
+  .nav-menu a:hover { opacity: 0.65; }
+  .nav-menu a.active { font-weight: 600; }
+
+  /* ══════════════════════════════════════
+     MAIN
+  ══════════════════════════════════════ */
+  main {
+    flex: 1;
+    background: var(--sur);
+    overflow-y: auto;
+    height: 100vh;
+    min-width: 0;
+  }
+
+  /* ══════════════════════════════════════
+     SECTIONS
+  ══════════════════════════════════════ */
+  .section { display: none; min-height: 100vh; }
+  .section.active { display: flex; flex-direction: column; }
+
+  /* ══════════════════════════════════════
+     LANDING PAGE
+  ══════════════════════════════════════ */
+  #sec-landing { position: relative; display: none; }
+  #sec-landing.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .landing-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .landing-bg canvas,
+  .landing-bg img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .landing-name {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(32px, 7vw, 120px);
+    font-weight: 300;
+    color: var(--off-white);
+    letter-spacing: 0.06em;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .landing-name:hover { opacity: 0.72; }
+
+  /* ══════════════════════════════════════
+     BLINDS
+  ══════════════════════════════════════ */
+  #sec-blinds { display: none; }
+  #sec-blinds.active { display: block; min-height: 100vh; position: relative; }
+
+  .blinds-bg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-auto-rows: auto;
+    gap: 3px;
+    padding: 3px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .blinds-bg-grid .g-item { overflow: hidden; cursor: pointer; position: relative; }
+  .blinds-bg-grid .g-item img { width:100%; height:100%; object-fit:contain; background:#1a1a1a; display:block; }
+  .blinds-bg-grid .g-item::after {
+    content:''; position:absolute; inset:0;
+    background: rgba(245,245,244,0); transition: background 0.25s;
+    pointer-events:none;
+  }
+  .blinds-bg-grid .g-item:hover::after { background: rgba(245,245,244,0.18); }
+
+  .blinds-center {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+    pointer-events: none;
+    min-height: 100vh;
+  }
+
+  .blinds-text-box {
+    pointer-events: all;
+    width: 360px;
+    max-width: 80vw;
+    background: rgba(245,245,244,0.90);
+    backdrop-filter: blur(3px);
+    padding: 36px 40px;
+    font-size: 15px;
+    color: var(--dark);
+    line-height: 1.85;
+    text-align: justify;
+  }
+  .blinds-text-box p + p { margin-top: 14px; }
+
+  /* ══════════════════════════════════════
+     GALLERY
+  ══════════════════════════════════════ */
+  #sec-gallery { display: none; padding: 0; }
+  #sec-gallery.active { display: block; min-height: 100vh; }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .gallery-grid .g-item { overflow: hidden; cursor: pointer; position: relative; }
+  .gallery-grid .g-item img { width:100%; height:100%; object-fit:contain; background:#1a1a1a; display:block; }
+  .gallery-grid .g-item::after {
+    content:''; position:absolute; inset:0;
+    background: rgba(245,245,244,0); transition: background 0.25s;
+    pointer-events:none;
+  }
+  .gallery-grid .g-item:hover::after { background: rgba(245,245,244,0.18); }
+
+  /* ══════════════════════════════════════
+     LIGHTBOX — fills 95% of screen, 70% dim
+  ══════════════════════════════════════ */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(52,53,52,0.70);
+    z-index: 900;
+    align-items: center;
+    justify-content: center;
+  }
+  .lightbox.open { display: flex; }
+
+  .lb-frame {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .lb-frame img {
+    display: block;
+    max-width: 86vw;
+    max-height: 86vh;
+    object-fit: contain;
+    width: auto;
+    height: auto;
+  }
+
+  .lb-close {
+    position: fixed;
+    top: 20px; right: 26px;
+    font-size: 20px;
+    color: var(--off-white);
+    cursor: pointer;
+    background: none; border: none;
+    font-family: var(--sans);
+    font-weight: 300;
+    opacity: 0.85;
+    padding: 6px 10px;
+    line-height: 1;
+    z-index: 910;
+  }
+  .lb-close:hover { opacity: 0.5; }
+
+  .lb-arrow {
+    flex-shrink: 0;
+    font-size: 32px;
+    color: var(--off-white);
+    cursor: pointer;
+    background: none; border: none;
+    font-family: var(--sans);
+    font-weight: 200;
+    opacity: 0.80;
+    padding: 0 20px;
+    line-height: 1;
+    z-index: 910;
+    user-select: none;
+    align-self: center;
+  }
+  .lb-arrow:hover { opacity: 0.45; }
+
+  /* ══════════════════════════════════════
+     PUBLICATIONS — centred first card, doubled size
+  ══════════════════════════════════════ */
+  #sec-publications { display: none; overflow: hidden; }
+  #sec-publications.active {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .pub-scroll-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    padding: 52px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mid) transparent;
+    cursor: grab;
+    width: 100%;
+  }
+  .pub-scroll-wrap:active { cursor: grabbing; }
+  .pub-scroll-wrap::-webkit-scrollbar { height: 2px; }
+  .pub-scroll-wrap::-webkit-scrollbar-thumb { background: var(--mid); border-radius:1px; }
+
+  .pub-spacer { flex-shrink: 0; }
+
+  .pub-card {
+    flex-shrink: 0;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+  }
+  .pub-card:hover .pub-img-wrap { filter: saturate(0.8); }
+
+  .pub-img-wrap {
+    background: var(--sur);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0s;
+    flex-shrink: 0;
+  }
+  .pub-img-wrap img { width:100%; height:100%; object-fit:contain; display:block; }
+
+  .pub-caption {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--mid);
+    letter-spacing: 0.03em;
+  }
+
+  /* ══════════════════════════════════════
+     CV — text centred, photo+contacts top-right
+  ══════════════════════════════════════ */
+  #sec-cv { display: none; min-height: 100vh; }
+  #sec-cv.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 64px 56px;
+  }
+
+  .cv-col-left {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .cv-body {
+    width: 440px;
+    max-width: 100%;
+    font-size: 15px;
+    color: var(--dark);
+    line-height: 1.85;
+  }
+  .cv-body p + p { margin-top: 14px; }
+
+  /* right column: photo on top, contacts below */
+  .cv-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cv-photo {
+    width: 170px;
+    height: 210px;
+    background: var(--mid);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .cv-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .cv-photo-ph {
+    font-size: 12px;
+    color: rgba(52,53,52,0.35);
+    letter-spacing: 0.06em;
+  }
+
+  .cv-contacts {
+    font-size: 14px;
+    color: var(--dark);
+    line-height: 2.1;
+  }
+  .cv-contacts a {
+    color: var(--dark);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(162,164,162,0.45);
+  }
+  .cv-contacts a:hover { opacity: 0.65; }
+
+  a:hover { opacity: 0.72; }
+
+  /* nav contacts pinned to bottom */
+  .nav-contacts-bottom {
+    margin-top: auto;
+    padding: 0 20px 0;
+    white-space: nowrap;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-sidebar:hover .nav-contacts-bottom { opacity: 1; }
+  .nav-contacts-bottom a {
+    font-size: 12px;
+    color: var(--mid);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    display: block;
+    padding: 3px 0;
+  }
+  .nav-contacts-bottom a:hover { opacity: 0.65; color: var(--dark); }
+
+  /* ── VIDEO TILE ── */
+  .vid-thumb {
+    position: relative;
+    width: 100%; height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+    background: #111;
+  }
+  /* transparent click-catcher sits above iframe */
+  .vid-click-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    cursor: pointer;
+  }
+  .vid-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: var(--off-white);
+    opacity: 0.85;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .vid-thumb:hover .vid-play { opacity: 0.55; }
+  .vid-thumb:hover img { filter: saturate(0.8); }
+
+  /* ── VIDEO LIGHTBOX ── */
+  .video-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(52,53,52,0.88);
+    z-index: 950;
+    align-items: center;
+    justify-content: center;
+  }
+  .video-lightbox.open { display: flex; }
+  .video-lightbox-inner {
+    position: relative;
+    width: 90vw;
+    max-width: 1100px;
+  }
+  .video-lightbox-inner iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: none;
+    display: block;
+  }
+  .video-lb-close {
+    position: absolute;
+    top: -38px; right: 0;
+    font-size: 20px;
+    color: var(--off-white);
+    cursor: pointer;
+    background: none; border: none;
+    font-family: var(--sans);
+    font-weight: 300;
+    opacity: 0.85;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+  .video-lb-close:hover { opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<div class="site">
+
+  <!-- SIDEBAR -->
+  <div class="nav-sidebar">
+    <!-- Hamburger icon -->
+    <div class="nav-dn"><span></span><span></span><span></span></div>
+    <div class="nav-panel">
+      <div class="nav-inner">
+        <div class="nav-name" data-target="landing">Davit Nersisyan</div>
+        <ul class="nav-menu">
+          <li><a href="#" data-target="cv">\ Bio</a></li>
+          <li style="margin-top:10px"><span class="nav-category">Long-time projects</span></li>
+          <li class="nav-sub"><a href="#" data-target="blinds">\ Blinds</a></li>
+          <li class="nav-sub"><a href="#" data-target="clubbing">\ Clubbing</a></li>
+          <li style="margin-top:10px"><a href="#" data-target="gallery">\ Gallery</a></li>
+          <li><a href="#" data-target="publications">\ Publications</a></li>
+        </ul>
+      </div>
+      <div class="nav-contacts-bottom">
+        <a href="mailto:nersisyandav@gmail.com">nersisyandav@gmail.com</a>
+        <a href="https://www.instagram.com/nersisyandav/" target="_blank">@nersisyandav</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- LANDING -->
+    <section class="section" id="sec-landing">
+      <div class="landing-bg" id="landing-bg"></div>
+      <div class="landing-name">Davit Nersisyan</div>
+    </section>
+
+    <!-- BLINDS -->
+    <section class="section" id="sec-blinds">
+      <div class="blinds-bg-grid" id="blinds-grid"></div>
+    </section>
+
+    <!-- CLUBBING -->
+    <section class="section" id="sec-clubbing">
+      <div class="gallery-grid" id="clubbing-grid"></div>
+    </section>
+
+    <!-- GALLERY -->
+    <section class="section" id="sec-gallery">
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </section>
+
+    <!-- PUBLICATIONS -->
+    <section class="section" id="sec-publications">
+      <div class="pub-scroll-wrap" id="pub-scroll"></div>
+    </section>
+
+    <!-- CV -->
+    <section class="section" id="sec-cv" style="position:relative;">
+      <div style="position:absolute;inset:0;z-index:0;overflow:hidden;"><img src="assets/img000.jpg" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0.35;" alt=""></div>
+      <div class="cv-col-left" style="position:relative;z-index:1;">
+        <div class="cv-body">
+          <p>I am an art and documentary photographer based in Yerevan. I have graduated from the <strong>International Center of Photography</strong> in New York and adopted a long-term project approach. That experience shaped my understanding of images as more than aesthetic objects but rather as a medium of communication through constantly evolving visual culture. During my professional career I have worked as a librarian, educator and freelance photographer being focused on transferring emotions through and above the medium.</p>
+          <p>My work focuses on people and stories that often fall outside mainstream narratives. I collaborate closely with the individuals I photograph, building relationships that allow their voices and experiences to guide the work. Over time, I began developing multi-chapter projects that combine photography, personal archives, video, and writing on intersection with contemporary technologies. One of these projects, which explores the sensory world of people with visual disabilities, received the <strong>IMAnext Japanese GrandPrix '21</strong> and <strong>Prince Claus Seed Award in 2024</strong>.</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- VIDEO LIGHTBOX -->
+<div class="video-lightbox" id="video-lightbox">
+  <div class="video-lightbox-inner">
+    <button class="video-lb-close" id="vlb-close">&#x2715;</button>
+    <!-- iframe injected dynamically by openVideo() -->
+  </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lb-close">&#x2715;</button>
+  <div class="lb-frame">
+    <button class="lb-arrow" id="lb-prev">&#8249;</button>
+    <img id="lb-img" src="" alt="">
+    <button class="lb-arrow" id="lb-next">&#8250;</button>
+  </div>
+</div>
+
+<script>
+/* ── canvas placeholder ── */
+function makePH(w, h, hue, l) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = `hsl(${hue},6%,${l}%)`;
+  ctx.fillRect(0,0,w,h);
+  return c.toDataURL();
+}
+
+const allImages = { blinds: [], gallery: [], clubbing: [] };
+let lbImages = [], lbIndex = 0;
+
+/* ── LANDING background ── */
+const landingBg = document.getElementById('landing-bg');
+const landingImg = document.createElement('img');
+landingImg.src = 'assets/img001.jpg';
+landingImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;';
+landingBg.appendChild(landingImg);
+
+
+/* ── BLINDS grid (real images) ── */
+const blindsGrid = document.getElementById('blinds-grid');
+const blindsData = [
+  {src:'assets/img002.jpg',ratio:1.4994,span:1},
+  {src:'assets/img003.jpg',ratio:1.4997,span:1},
+  {src:'assets/img004.jpg',ratio:1.4997,span:2},
+  {src:'assets/img005.jpg',ratio:0.6668,span:1},
+  {src:'assets/img006.jpg',ratio:1.4997,span:1},
+  {src:'assets/img007.jpg',ratio:1.499,span:2},
+  {src:'assets/img008.jpg',ratio:1.4997,span:1},
+  {src:'assets/img009.jpg',ratio:1.5007,span:1},
+  {src:'assets/img010.jpg',ratio:1.4997,span:1},
+  {src:'assets/img011.jpg',ratio:1.4989,span:2},
+  {src:'assets/img012.jpg',ratio:1.5097,span:1},
+  {src:'assets/img013.jpg',ratio:2.2248,span:1},
+  {src:'assets/img014.jpg',ratio:2.2248,span:2},
+  {src:'assets/img015.jpg',ratio:2.2248,span:1},
+  {src:'assets/img016.jpg',ratio:1.5102,span:1},
+  {src:'assets/img017.jpg',ratio:1.4989,span:1},
+  {src:'assets/img018.jpg',ratio:0.6287,span:2},
+  {src:'assets/img019.jpg',ratio:1.5102,span:1},
+  {src:'assets/img020.jpg',ratio:1.4997,span:1},
+];
+
+blindsData.forEach((d, i) => {
+  // Insert text block after 6th image (before 7th)
+  if (i === 6) {
+    const textItem = document.createElement('div');
+    textItem.className = 'g-item';
+    textItem.style.cssText = 'aspect-ratio:3/1;background:rgba(245,245,244,0.93);display:flex;align-items:center;justify-content:center;grid-column:span 2;cursor:default;';
+    textItem.innerHTML = '<div class="blinds-text-box" style="background:none;backdrop-filter:none;padding:28px 32px;"><p>With this project I explore how human vision works and I am making it through communication people with visually disabilities. I am interested in the edge of digital communications, how the eye works and the ways we see.</p></div>';
+    blindsGrid.appendChild(textItem);
+  }
+  if (i === 10) {
+    const vitem = document.createElement('div');
+    vitem.className = 'g-item video-tile';
+    vitem.style.aspectRatio = '16/9';
+    vitem.style.gridColumn = 'span 2';
+    vitem.innerHTML = '<div class=\'vid-thumb\' onclick=\'openVideo()\'><img src=\'assets/img021.png\' alt=\'Video\' style=\'width:100%;height:100%;object-fit:cover;display:block;\'><div class=\'vid-play\'>&#9654;</div></div>';
+    blindsGrid.appendChild(vitem);
+  }
+  const item = document.createElement('div');
+  item.className = 'g-item';
+  item.style.aspectRatio = d.ratio;
+  if (d.span === 2) item.style.gridColumn = 'span 2';
+  const img = document.createElement('img');
+  img.src = d.src; img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#1a1a1a;';
+  item.appendChild(img);
+  const idx = allImages.blinds.length;
+  allImages.blinds.push(d.src);
+  item.addEventListener('click', () => openLightbox(allImages.blinds, idx));
+  blindsGrid.appendChild(item);
+});
+
+/* ── GALLERY grid (real images) ── */
+const galleryGrid = document.getElementById('gallery-grid');
+const galleryData = [
+  {src:'assets/img022.jpg',ratio:0.6631,span:2},
+  {src:'assets/img023.jpg',ratio:0.6631,span:1},
+  {src:'assets/img024.jpg',ratio:1.508,span:1},
+  {src:'assets/img025.jpg',ratio:1.508,span:1},
+  {src:'assets/img026.jpg',ratio:1.508,span:1},
+  {src:'assets/img027.jpg',ratio:0.6631,span:2},
+  {src:'assets/img028.jpg',ratio:0.6631,span:1},
+  {src:'assets/img029.jpg',ratio:1.508,span:1},
+  {src:'assets/img030.jpg',ratio:0.6631,span:2},
+  {src:'assets/img031.jpg',ratio:0.6631,span:1},
+  {src:'assets/img032.jpg',ratio:1.518,span:1},
+  {src:'assets/img033.jpg',ratio:0.7519,span:1},
+  {src:'assets/img034.jpg',ratio:1.5109,span:1},
+  {src:'assets/img035.jpg',ratio:1.5109,span:2},
+  {src:'assets/img036.jpg',ratio:1.5123,span:1},
+  {src:'assets/img037.jpg',ratio:1.5106,span:1},
+  {src:'assets/img038.jpg',ratio:1.5198,span:1},
+  {src:'assets/img039.jpg',ratio:0.6637,span:2},
+  {src:'assets/img040.jpg',ratio:1.4995,span:1},
+  {src:'assets/img041.jpg',ratio:0.6669,span:1},
+];
+
+galleryData.forEach((d, i) => {
+  const item = document.createElement('div');
+  item.className = 'g-item';
+  item.style.aspectRatio = d.ratio;
+  if (d.span === 2) item.style.gridColumn = 'span 2';
+  const img = document.createElement('img');
+  img.src = d.src; img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#1a1a1a;';
+  item.appendChild(img);
+  const idx = allImages.gallery.length;
+  allImages.gallery.push(d.src);
+  item.addEventListener('click', () => openLightbox(allImages.gallery, idx));
+  galleryGrid.appendChild(item);
+});
+
+/* ── PUBLICATIONS ── */
+const pubScroll = document.getElementById('pub-scroll');
+const pubsData = [
+  {src:'assets/img042.jpg',ratio:0.8007,label:'Mit dem inneren Auge sehen',url:'#'},
+  {src:'assets/img043.jpg',ratio:0.8007,label:'Salt — Iranian Creatives Finding Form in Armenia',url:'#'},
+  {src:'assets/img044.jpg',ratio:0.8007,label:'Salt — Where Shame Unravels',url:'#'},
+  {src:'assets/img045.jpg',ratio:0.8007,label:'EVN Report — Choir in the Dark',url:'#'},
+  {src:'assets/img046.jpg',ratio:0.8007,label:'EVN Report — About the Alternative World of Spaces Between Objects',url:'#'},
+];
+
+function updatePubSpacer() {
+  pubScroll.querySelectorAll('.pub-spacer').forEach(el => el.remove());
+  const wrapW = pubScroll.getBoundingClientRect().width;
+  const firstCard = pubScroll.querySelector('.pub-card');
+  const cardW = firstCard ? firstCard.offsetWidth : 400;
+  const spacer = Math.max(0, (wrapW - cardW) / 2);
+  const sp  = document.createElement('div');
+  sp.className = 'pub-spacer'; sp.style.width = spacer + 'px';
+  const sp2 = sp.cloneNode();
+  pubScroll.insertBefore(sp, pubScroll.firstChild);
+  pubScroll.appendChild(sp2);
+}
+
+pubsData.forEach((p, i) => {
+  const card = document.createElement('a');
+  card.className = 'pub-card';
+  card.href = p.url; card.target = '_blank';
+  // Card width based on natural image ratio * fixed height
+  const cardH = 520;
+  const cardW = Math.round(cardH * p.ratio);
+  card.style.width = cardW + 'px';
+  const wrap = document.createElement('div');
+  wrap.className = 'pub-img-wrap';
+  wrap.style.width = cardW + 'px';
+  wrap.style.height = cardH + 'px';
+  const img = document.createElement('img');
+  img.src = p.src; img.alt = p.label;
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#f0f0ee;';
+  wrap.appendChild(img);
+  const cap = document.createElement('div');
+  cap.className = 'pub-caption'; cap.textContent = p.label;
+  card.appendChild(wrap); card.appendChild(cap);
+  pubScroll.appendChild(card);
+});
+
+requestAnimationFrame(() => requestAnimationFrame(updatePubSpacer));
+window.addEventListener('resize', updatePubSpacer);
+
+/* pub drag-to-scroll */
+let isDn=false, sx, sl;
+pubScroll.addEventListener('mousedown', e => { isDn=true; sx=e.pageX-pubScroll.offsetLeft; sl=pubScroll.scrollLeft; });
+pubScroll.addEventListener('mouseleave', () => isDn=false);
+pubScroll.addEventListener('mouseup',    () => isDn=false);
+pubScroll.addEventListener('mousemove',  e => {
+  if (!isDn) return; e.preventDefault();
+  pubScroll.scrollLeft = sl - (e.pageX - pubScroll.offsetLeft - sx) * 1.2;
+});
+
+/* ── VIDEO LIGHTBOX ── */
+const videoLightbox = document.getElementById('video-lightbox');
+// vlbIframe created dynamically on each open
+const vlbClose      = document.getElementById('vlb-close');
+
+function openVideo() {
+  // Dynamically create iframe so autoplay fires reliably
+  const inner = document.querySelector('.video-lightbox-inner');
+  const existing = document.getElementById('vlb-iframe');
+  if (existing) existing.remove();
+  const iframe = document.createElement('iframe');
+  iframe.id = 'vlb-iframe';
+  iframe.src = 'https://www.youtube.com/embed/d__mIwXksMM?si=kE1RxFc0Ic8xpel5&autoplay=1';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  iframe.allowFullscreen = true;
+  iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block;';
+  // Insert before the close button
+  inner.appendChild(iframe);
+  videoLightbox.classList.add('open');
+}
+function closeVideo() {
+  // Remove iframe entirely so audio stops immediately
+  const iframe = document.getElementById('vlb-iframe');
+  if (iframe) iframe.remove();
+  videoLightbox.classList.remove('open');
+}
+vlbClose.addEventListener('click', closeVideo);
+videoLightbox.addEventListener('click', e => { if (e.target === videoLightbox) closeVideo(); });
+/* ── IMAGE LIGHTBOX ── */
+const lightbox = document.getElementById('lightbox');
+const lbImg    = document.getElementById('lb-img');
+const lbClose  = document.getElementById('lb-close');
+const lbPrev   = document.getElementById('lb-prev');
+const lbNext   = document.getElementById('lb-next');
+
+function openLightbox(imgs, idx) {
+  lbImages = imgs; lbIndex = idx;
+  lbImg.src = lbImages[lbIndex];
+  lightbox.classList.add('open');
+}
+function lbGo(dir) {
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  lbImg.src = lbImages[lbIndex];
+}
+
+lbClose.addEventListener('click', () => lightbox.classList.remove('open'));
+lbPrev.addEventListener('click',  () => lbGo(-1));
+lbNext.addEventListener('click',  () => lbGo(+1));
+lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+document.addEventListener('keydown', e => {
+  if (videoLightbox.classList.contains('open')) {
+    if (e.key === 'Escape') closeVideo();
+    return;
+  }
+  if (!lightbox.classList.contains('open')) return;
+  if (e.key === 'Escape')     lightbox.classList.remove('open');
+  if (e.key === 'ArrowLeft')  lbGo(-1);
+  if (e.key === 'ArrowRight') lbGo(+1);
+});
+
+/* ── CLUBBING grid ── */
+const clubbingGrid = document.getElementById('clubbing-grid');
+const clubbingData = [
+  {src:'assets/img047.jpg',ratio:1.4997,span:1},
+  {src:'assets/img048.jpg',ratio:1.4993,span:1},
+  {src:'assets/img049.jpg',ratio:1.4997,span:2},
+  {src:'assets/img050.jpg',ratio:1.4997,span:1},
+  {src:'assets/img051.jpg',ratio:1.4997,span:1},
+  {src:'assets/img052.jpg',ratio:0.6668,span:1},
+  {src:'assets/img053.jpg',ratio:1.4997,span:2},
+  {src:'assets/img054.jpg',ratio:1.4997,span:1},
+  {src:'assets/img055.jpg',ratio:0.6668,span:1},
+  {src:'assets/img056.jpg',ratio:1.4997,span:1},
+  {src:'assets/img057.jpg',ratio:1.4997,span:1},
+  {src:'assets/img058.jpg',ratio:1.4997,span:2},
+  {src:'assets/img059.jpg',ratio:1.4997,span:1},
+  {src:'assets/img060.jpg',ratio:0.6668,span:1},
+  {src:'assets/img061.jpg',ratio:1.4997,span:1},
+  {src:'assets/img062.jpg',ratio:1.4997,span:2},
+  {src:'assets/img063.jpg',ratio:1.4997,span:1},
+  {src:'assets/img064.jpg',ratio:1.4997,span:1},
+  {src:'assets/img065.jpg',ratio:1.4997,span:1},
+  {src:'assets/img066.jpg',ratio:1.4997,span:1},
+  {src:'assets/img067.jpg',ratio:1.4997,span:2},
+  {src:'assets/img068.jpg',ratio:1.5000,span:1},
+  {src:'assets/img069.jpg',ratio:1.5000,span:1},
+  {src:'assets/img070.jpg',ratio:0.6672,span:1},
+  {src:'assets/img071.jpg',ratio:1.4997,span:2},
+];
+
+clubbingData.forEach((d, i) => {
+  const item = document.createElement('div');
+  item.className = 'g-item';
+  item.style.aspectRatio = d.ratio;
+  if (d.span === 2) item.style.gridColumn = 'span 2';
+  const img = document.createElement('img');
+  img.src = d.src; img.alt = '';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#1a1a1a;';
+  item.appendChild(img);
+  const idx = allImages.clubbing.length;
+  allImages.clubbing.push(d.src);
+  item.addEventListener('click', () => openLightbox(allImages.clubbing, idx));
+  clubbingGrid.appendChild(item);
+});
+
+/* ── NAVIGATION ── */
+function showSection(target) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+  const sec  = document.getElementById('sec-' + target);
+  const link = document.querySelector(`.nav-menu a[data-target="${target}"]`);
+  if (sec)  sec.classList.add('active');
+  if (link) link.classList.add('active');
+  document.getElementById('main').scrollTop = 0;
+  if (target === 'publications') requestAnimationFrame(updatePubSpacer);
+}
+
+document.querySelectorAll('.nav-menu a[data-target]').forEach(link => {
+  link.addEventListener('click', e => { e.preventDefault(); showSection(link.dataset.target); });
+});
+
+// "Davit Nersisyan" name in nav navigates to landing
+document.querySelector('.nav-name[data-target]').addEventListener('click', () => showSection('landing'));
+
+// "Davit Nersisyan" on the landing page goes to bio
+document.querySelector('.landing-name').addEventListener('click', () => showSection('cv'));
+
+// Default: landing page
+showSection('landing');
+</script>
+</body>
+</html>
